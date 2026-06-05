@@ -70,11 +70,19 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:pass@postgres:5432/processed_db
+      AIRFLOW__CORE__FERNET_KEY: 'FB0o2k3PdkPWK2m5F2YH0HdiWk2vT4R6d8qQ2f6Y1fQ='
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
       - ./great_expectations:/opt/airflow/great_expectations
+    command: >
+      bash -c "
+        airflow db init &&
+        airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
+        airflow webserver
+      "
 
   spark:
     build: ./spark
@@ -87,6 +95,7 @@ services:
     volumes:
       - ./spark:/opt/spark_jobs
       - ./great_expectations:/opt/spark_jobs/great_expectations
+    command: tail -f /dev/null
 
 volumes:
   minio_data:
